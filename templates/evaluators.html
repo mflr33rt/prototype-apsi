@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block heading %}Evaluator Approval{% endblock %}
+{% block body %}
+<div class="flex items-center justify-between mb-5">
+  <div><h2 class="text-lg font-bold text-white">Evaluator List <span class="text-xs text-cyan-400 font-mono">SR-02 → SR-06</span></h2>
+    <p class="text-xs text-slate-400">Auto-generated from the org structure, then approved before forms are distributed.</p></div>
+  <div class="space-x-2">
+    <a href="{{ url_for('evaluators_generate') }}" class="btn-ghost"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Generate List</a>
+    <a href="{{ url_for('evaluators_decide',decision='approve') }}" class="btn"><i class="fa-solid fa-check mr-1"></i>Approve &amp; Distribute</a>
+  </div>
+</div>
+
+{% for assessee, items in grouped.items() %}
+<div class="glossy rounded-xl p-4 mb-3">
+  <div class="flex items-center justify-between mb-3">
+    <h3 class="text-sm font-semibold text-white">Target: {{ assessee }}</h3>
+    {% set st = items[0]['approval_status'] %}
+    <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold
+      {{ 'bg-emerald-500/15 text-emerald-300' if st=='approved' else 'bg-amber-500/15 text-amber-300' if st=='pending' else 'bg-rose-500/15 text-rose-300' }}">{{ st }}</span>
+  </div>
+  <div class="grid md:grid-cols-2 gap-2">
+    {% for it in items %}
+    <div class="flex items-center justify-between bg-slate-950/40 rounded-lg px-3 py-2 text-xs">
+      <span class="text-slate-300">{{ it['evaluator'] }}</span>
+      <span class="flex items-center gap-2">
+        <span class="text-cyan-400 uppercase tracking-wide">{{ it['relation_type'] }}</span>
+        {% if it['submitted'] %}<i class="fa-solid fa-circle-check text-emerald-400" title="submitted"></i>
+        {% else %}<i class="fa-regular fa-circle text-slate-600" title="waiting"></i>{% endif %}
+      </span></div>
+    {% endfor %}
+  </div>
+</div>
+{% else %}
+<p class="text-sm text-slate-400">No assignments yet — click <strong>Generate List</strong> to build the 360 evaluator set.</p>
+{% endfor %}
+{% endblock %}

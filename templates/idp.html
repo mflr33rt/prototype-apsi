@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block heading %}IDP Recommendations{% endblock %}
+{% block body %}
+<h2 class="text-lg font-bold text-white mb-1">Individual Development Plan</h2>
+<p class="text-xs text-slate-400 mb-5">Auto-generated from indicators that fall below the corporate target.</p>
+<div class="grid md:grid-cols-2 gap-3">
+{% for c in cards %}
+  <div class="glossy rounded-xl p-4">
+    <div class="flex items-center justify-between mb-2">
+      <h3 class="text-sm font-semibold text-white">{{ c['name'] }}</h3>
+      <span class="text-xs text-cyan-300 font-mono">overall {{ '%.2f'|format(c['overall']) }}</span>
+    </div>
+    {% if c['gaps'] %}
+      <p class="text-[11px] text-slate-400 mb-2">Focus areas:</p>
+      <ul class="space-y-1">
+      {% for label,gap in c['gaps'] %}
+        <li class="text-xs text-slate-300 flex items-center gap-2">
+          <i class="fa-solid fa-arrow-trend-up text-amber-400"></i>
+          Strengthen <strong class="text-white">{{ label }}</strong> <span class="text-rose-300 font-mono">({{ '%+.2f'|format(gap) }})</span></li>
+      {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-xs text-emerald-300"><i class="fa-solid fa-circle-check mr-1"></i>Meets all targets — maintain &amp; mentor others.</p>
+    {% endif %}
+  </div>
+{% else %}<p class="text-sm text-slate-400">No results to base recommendations on yet.</p>{% endfor %}
+</div>
+{% endblock %}

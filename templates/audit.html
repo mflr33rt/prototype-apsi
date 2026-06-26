@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block heading %}Audit Trail{% endblock %}
+{% block body %}
+<h2 class="text-lg font-bold text-white mb-4">Audit Trail</h2>
+<table class="w-full text-xs">
+  <thead><tr class="uppercase text-slate-500 text-left border-b border-white/5">
+    <th class="py-2">Time</th><th>User</th><th>Action</th><th>Detail</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr class="border-b border-white/5">
+      <td class="py-2 font-mono text-slate-500">{{ r['created_at'] }}</td>
+      <td class="text-slate-300">{{ r['username'] }}</td>
+      <td><span class="text-cyan-400 font-mono">{{ r['action'] }}</span></td>
+      <td class="text-slate-400">{{ r['detail'] }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

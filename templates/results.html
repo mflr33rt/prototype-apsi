@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block heading %}Assessment Results{% endblock %}
+{% block body %}
+<div class="flex items-center justify-between mb-5">
+  <div><h2 class="text-lg font-bold text-white">Consolidated Results <span class="text-xs text-cyan-400 font-mono">SR-08/09</span></h2>
+    <p class="text-xs text-slate-400">{{ period['name'] }}</p></div>
+  {% if user['role'] in ['admin','hr'] %}
+  <a href="{{ url_for('consolidate_route') }}" class="btn"><i class="fa-solid fa-rotate mr-1"></i>Consolidate now</a>{% endif %}
+</div>
+<table class="w-full text-sm">
+  <thead><tr class="text-[11px] uppercase text-slate-500 text-left border-b border-white/5">
+    <th class="py-2">Employee</th>{% for v in VALUES %}<th class="text-center">{{ VALUE_LABELS[v] }}</th>{% endfor %}
+    <th class="text-center">Overall</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr class="border-b border-white/5">
+      <td class="py-3"><div class="font-semibold text-white">{{ r['full_name'] }}</div>
+        <div class="text-[11px] text-slate-500">{{ r['position'] }}</div></td>
+      {% for v in VALUES %}
+        <td class="text-center {{ 'text-rose-300' if r[v] < TARGET else 'text-slate-200' }}">{{ '%.2f'|format(r[v]) }}</td>
+      {% endfor %}
+      <td class="text-center font-bold text-cyan-300">{{ '%.2f'|format(r['overall']) }}</td></tr>
+  {% else %}
+    <tr><td colspan="7" class="py-6 text-center text-slate-400">No results yet — submit forms, then consolidate.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="text-[11px] text-slate-500 mt-3">Scores below the corporate target ({{ '%.2f'|format(TARGET) }}) are highlighted.</p>
+{% endblock %}

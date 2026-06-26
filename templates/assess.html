@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block heading %}Assessment Form{% endblock %}
+{% block body %}
+<div class="max-w-xl mx-auto">
+  <div class="mb-5">
+    <h2 class="text-lg font-bold text-white"><i class="fa-solid fa-user-secret text-cyan-400 mr-2"></i>Assessment Form</h2>
+    <p class="text-xs text-slate-400">Evaluating <span class="text-white font-semibold">{{ a['assessee'] }}</span>
+      ({{ a['relation_type'] }}) · 1 = Poor, 5 = Outstanding</p>
+  </div>
+  <form method="post" class="space-y-4">
+    {% for v in VALUES %}
+    <div class="glossy rounded-xl p-4">
+      <label class="text-sm font-semibold text-white">{{ loop.index }}. {{ VALUE_LABELS[v] }}</label>
+      <select name="{{ v }}" class="inp mt-2" required>
+        <option value="5">5 — Sangat Istimewa</option>
+        <option value="4" selected>4 — Baik</option>
+        <option value="3">3 — Cukup</option>
+        <option value="2">2 — Kurang</option>
+        <option value="1">1 — Sangat Kurang</option>
+      </select>
+    </div>
+    {% endfor %}
+    <div class="glossy rounded-xl p-4">
+      <label class="text-sm font-semibold text-white">Comment (optional)</label>
+      <textarea name="comment" rows="2" class="inp mt-2"></textarea>
+    </div>
+    <div class="flex gap-2">
+      <button class="btn flex-grow uppercase tracking-wide">Submit Score</button>
+      <a href="{{ url_for('my_assignments') }}" class="btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

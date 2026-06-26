@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block heading %}Employee Data{% endblock %}
+{% block body %}
+<div class="flex items-center justify-between mb-5">
+  <div><h2 class="text-lg font-bold text-white">Employee Data <span class="text-xs text-cyan-400 font-mono">SR-01</span></h2>
+    <p class="text-xs text-slate-400">The initial trigger of the assessment cycle.</p></div>
+  <button onclick="document.getElementById('addbox').classList.toggle('hidden')" class="btn"><i class="fa-solid fa-plus mr-1"></i>Add Employee</button>
+</div>
+
+<div id="addbox" class="hidden glossy rounded-xl p-4 mb-5">
+  <form method="post" class="grid md:grid-cols-5 gap-3 items-end">
+    <div><label class="text-[11px] text-slate-400">NIP</label><input name="nip" class="inp mt-1" required></div>
+    <div><label class="text-[11px] text-slate-400">Full name</label><input name="full_name" class="inp mt-1" required></div>
+    <div><label class="text-[11px] text-slate-400">Position</label><input name="position" class="inp mt-1" required></div>
+    <div><label class="text-[11px] text-slate-400">Supervisor</label>
+      <select name="supervisor_id" class="inp mt-1"><option value="">— none —</option>
+        {% for e in allemp %}<option value="{{e['id']}}">{{e['full_name']}}</option>{% endfor %}</select></div>
+    <button class="btn">Save</button>
+  </form>
+</div>
+
+<table class="w-full text-sm">
+  <thead><tr class="text-[11px] uppercase text-slate-500 text-left border-b border-white/5">
+    <th class="py-2">NIP</th><th>Name</th><th>Position</th><th>Department</th><th>Supervisor</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr class="border-b border-white/5">
+      <td class="py-3 font-mono text-slate-400">{{ r['nip'] }}</td>
+      <td class="font-semibold text-white">{{ r['full_name'] }}</td>
+      <td class="text-slate-300">{{ r['position'] }}</td>
+      <td class="text-slate-400">{{ r['department'] }}</td>
+      <td class="text-slate-400">{{ r['sup_name'] or '—' }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

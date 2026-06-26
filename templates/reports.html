@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block heading %}Evaluation Reports{% endblock %}
+{% block body %}
+<div class="flex items-center justify-between mb-5">
+  <div><h2 class="text-lg font-bold text-white">Evaluation Reports <span class="text-xs text-cyan-400 font-mono">SR-09/11/12</span></h2>
+    <p class="text-xs text-slate-400">Generated reports are archived and shared with Management.</p></div>
+  {% if user['role'] in ['admin','hr'] %}
+  <a href="{{ url_for('reports_generate') }}" class="btn"><i class="fa-solid fa-file-circle-plus mr-1"></i>Generate Report</a>{% endif %}
+</div>
+<div class="space-y-2">
+{% for r in rows %}
+  <div class="glossy rounded-xl p-4 flex items-center justify-between">
+    <div>
+      <div class="text-sm font-semibold text-white">{{ r['title'] }}</div>
+      <div class="text-[11px] text-slate-500">{{ r['period_name'] }} · generated {{ r['generated_at'] }} · {{ r['summary'] }}</div>
+    </div>
+    <a href="{{ url_for('report_pdf',rid=r['id']) }}" target="_blank" class="btn-ghost"><i class="fa-solid fa-file-pdf mr-1 text-rose-400"></i>Download PDF</a>
+  </div>
+{% else %}<p class="text-sm text-slate-400">No reports archived yet.</p>{% endfor %}
+</div>
+{% endblock %}

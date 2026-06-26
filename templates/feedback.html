@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block heading %}My Feedback{% endblock %}
+{% block body %}
+<h2 class="text-lg font-bold text-white mb-1">My Assessment Feedback</h2>
+<p class="text-xs text-slate-400 mb-5">{{ period['name'] }}</p>
+{% if res %}
+<div class="grid grid-cols-2 md:grid-cols-6 gap-3 mb-5">
+  {% for v in VALUES %}
+  <div class="glossy rounded-xl p-3 text-center">
+    <div class="text-[11px] text-slate-400">{{ VALUE_LABELS[v] }}</div>
+    <div class="text-lg font-bold {{ 'text-rose-300' if res[v]<TARGET else 'text-white' }}">{{ '%.2f'|format(res[v]) }}</div></div>
+  {% endfor %}
+  <div class="glossy rounded-xl p-3 text-center border border-cyan-500/30">
+    <div class="text-[11px] text-cyan-400">Overall</div>
+    <div class="text-lg font-bold text-cyan-300">{{ '%.2f'|format(res['overall']) }}</div></div>
+</div>
+<h3 class="text-sm font-semibold text-white mb-2">Comments from evaluators</h3>
+<div class="space-y-2">
+{% for c in comments %}<div class="glossy rounded-xl px-4 py-2 text-sm text-slate-300">"{{ c['comment'] }}"</div>
+{% else %}<p class="text-xs text-slate-400">No comments left.</p>{% endfor %}
+</div>
+{% else %}<p class="text-sm text-slate-400">Your results aren't available yet — evaluations may still be in progress.</p>{% endif %}
+{% endblock %}

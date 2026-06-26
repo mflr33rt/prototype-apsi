@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feedback360Degree · FRI-142</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  body{font-family:'Inter',sans-serif;background:#0b1329}
+  .glossy{background:linear-gradient(135deg,rgba(20,30,55,.75),rgba(10,17,40,.85));
+    backdrop-filter:blur(20px);border:1px solid rgba(56,189,248,.12);
+    box-shadow:0 20px 50px rgba(0,0,0,.4)}
+  .nav-active{background:linear-gradient(90deg,rgba(56,189,248,.15),rgba(56,189,248,.02));
+    border-left:3px solid #38bdf8;color:#fff}
+  .navlink{color:#94a3b8}.navlink:hover{background:rgba(15,23,42,.4);color:#fff}
+  ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#1e293b;border-radius:10px}
+  .inp{background:#0b1329;border:1px solid rgba(255,255,255,.08);border-radius:.6rem;
+    padding:.5rem .75rem;color:#e2e8f0;width:100%;font-size:.85rem}
+  .btn{background:linear-gradient(90deg,#06b6d4,#0ea5e9);color:#04111f;font-weight:700;
+    padding:.5rem 1rem;border-radius:.6rem;font-size:.8rem}
+  .btn-ghost{background:#1e293b;color:#cbd5e1;padding:.45rem .9rem;border-radius:.6rem;font-size:.78rem;border:1px solid rgba(255,255,255,.06)}
+</style>
+</head>
+<body class="text-slate-200 min-h-screen">
+{% if user %}
+<div class="flex min-h-screen">
+  <!-- Sidebar -->
+  <aside class="w-60 shrink-0 glossy m-3 rounded-2xl p-4 flex flex-col">
+    <div class="flex items-center gap-2 px-2 mb-6">
+      <div class="w-8 h-8 bg-gradient-to-tr from-sky-500 to-cyan-400 rounded-lg flex items-center justify-center text-slate-950 font-black">F</div>
+      <span class="text-sm font-bold text-white leading-tight">Feedback360<span class="text-cyan-400 font-light">·FRI142</span></span>
+    </div>
+    {% set R = user['role'] %}
+    <nav class="space-y-1 text-xs font-semibold flex-grow">
+      {% macro link(ep,icon,label) %}
+        <a href="{{ url_for(ep) }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl navlink {{ 'nav-active' if request.endpoint==ep }}">
+          <i class="fa-solid {{ icon }} w-4"></i><span>{{ label }}</span></a>
+      {% endmacro %}
+      {% if R in ['admin','hr','management'] %}{{ link('dashboard','fa-chart-line','Dashboard') }}{% endif %}
+      {% if R in ['admin','hr'] %}{{ link('employees','fa-users-gear','Employee Data') }}{% endif %}
+      {% if R in ['admin','hr'] %}{{ link('periods','fa-calendar-days','Evaluation Period') }}{% endif %}
+      {% if R in ['admin','hr'] %}{{ link('evaluators','fa-user-check','Evaluator Approval') }}{% endif %}
+      {% if R == 'employee' %}{{ link('my_assignments','fa-pen-to-square','Fill Assessment') }}{% endif %}
+      {% if R in ['admin','hr','management'] %}{{ link('results','fa-square-poll-vertical','Assessment Results') }}{% endif %}
+      {% if R in ['admin','hr','management'] %}{{ link('gap','fa-chart-gantt','Gap Analysis') }}{% endif %}
+      {% if R in ['admin','hr','management'] %}{{ link('idp','fa-graduation-cap','IDP Recommendations') }}{% endif %}
+      {% if R in ['admin','hr','management'] %}{{ link('reports','fa-file-lines','Evaluation Reports') }}{% endif %}
+      {% if R == 'employee' %}{{ link('feedback','fa-comment-dots','My Feedback') }}{% endif %}
+      {{ link('notifications','fa-bell','Notifications') }}
+      {% if R in ['admin','hr','management'] %}{{ link('history','fa-clock-rotate-left','Evaluation History') }}{% endif %}
+      {% if R == 'admin' %}{{ link('audit','fa-shield-halved','Audit Trail') }}{% endif %}
+    </nav>
+    <a href="{{ url_for('logout') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl navlink text-xs font-semibold mt-2">
+      <i class="fa-solid fa-arrow-right-from-bracket w-4"></i><span>Logout</span></a>
+  </aside>
+
+  <!-- Main -->
+  <div class="flex-grow p-3 pl-0">
+    <header class="glossy rounded-2xl px-6 py-3 flex justify-between items-center mb-3">
+      <div class="text-sm text-slate-400">360° Core Values Assessment <span class="text-slate-600">/</span>
+        <span class="text-white font-semibold">{{ self.heading() }}</span></div>
+      <div class="flex items-center gap-4">
+        <a href="{{ url_for('notifications') }}" class="relative text-slate-400 hover:text-white">
+          <i class="fa-solid fa-bell"></i>
+          {% if unread %}<span class="absolute -top-2 -right-2 bg-cyan-500 text-slate-950 text-[10px] font-bold rounded-full px-1.5">{{ unread }}</span>{% endif %}
+        </a>
+        <div class="text-right">
+          <div class="text-sm font-semibold text-white">{{ user['display_name'] }}</div>
+          <div class="text-[11px] text-cyan-400 uppercase tracking-wide">{{ user['role'] }}</div>
+        </div>
+        <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-sky-500 to-cyan-400 flex items-center justify-center text-slate-950 font-bold text-xs">
+          {{ user['display_name'][:2]|upper }}</div>
+      </div>
+    </header>
+
+    {% with msgs = get_flashed_messages(with_categories=true) %}
+      {% for cat,m in msgs %}
+        <div class="rounded-xl px-4 py-2.5 mb-3 text-sm border
+          {{ 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' if cat=='ok'
+             else 'bg-rose-500/10 border-rose-500/30 text-rose-300' }}">
+          <i class="fa-solid {{ 'fa-circle-check' if cat=='ok' else 'fa-triangle-exclamation' }} mr-1"></i>{{ m }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <main class="glossy rounded-2xl p-6 min-h-[70vh]">{% block body %}{% endblock %}</main>
+  </div>
+</div>
+{% else %}{% block plain %}{% endblock %}{% endif %}
+</body>
+</html>

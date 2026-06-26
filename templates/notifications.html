@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block heading %}Notifications{% endblock %}
+{% block body %}
+<h2 class="text-lg font-bold text-white mb-4">Notifications <span class="text-xs text-cyan-400 font-mono">SR-10</span></h2>
+<div class="space-y-2">
+{% for r in rows %}
+  <div class="glossy rounded-xl px-4 py-3 flex items-center gap-3">
+    <i class="fa-solid fa-bell text-cyan-400"></i>
+    <div class="flex-grow"><div class="text-sm text-slate-200">{{ r['message'] }}</div>
+      <div class="text-[11px] text-slate-500">{{ r['created_at'] }}</div></div>
+  </div>
+{% else %}<p class="text-sm text-slate-400">No notifications.</p>{% endfor %}
+</div>
+{% endblock %}

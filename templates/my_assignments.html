@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block heading %}Fill Assessment{% endblock %}
+{% block body %}
+<h2 class="text-lg font-bold text-white mb-1">Assigned Evaluations</h2>
+<p class="text-xs text-slate-400 mb-5">{{ period['name'] }} — your responses are anonymous.</p>
+<div class="grid md:grid-cols-2 gap-3">
+{% for r in rows %}
+  <div class="glossy rounded-xl p-4 flex items-center justify-between">
+    <div>
+      <div class="text-sm font-semibold text-white">{{ r['assessee'] }}</div>
+      <div class="text-[11px] text-cyan-400 uppercase tracking-wide">{{ r['relation_type'] }} assessment</div>
+    </div>
+    {% if r['submitted'] %}
+      <span class="text-emerald-300 text-xs"><i class="fa-solid fa-circle-check mr-1"></i>Submitted</span>
+    {% else %}
+      <a href="{{ url_for('assess',aid=r['id']) }}" class="btn">Fill form</a>
+    {% endif %}
+  </div>
+{% else %}
+  <p class="text-sm text-slate-400">No forms assigned to you yet. Forms appear once HR approves the evaluator list.</p>
+{% endfor %}
+</div>
+{% endblock %}

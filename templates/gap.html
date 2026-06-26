@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block heading %}Gap Analysis{% endblock %}
+{% block body %}
+<div class="flex items-center justify-between mb-5">
+  <h2 class="text-lg font-bold text-white">Gap Analysis</h2>
+  <form method="get"><select name="emp" class="inp w-56" onchange="this.form.submit()">
+    {% for e in emps %}<option value="{{e['id']}}" {{ 'selected' if e['id']==sel }}>{{ e['full_name'] }}</option>{% endfor %}
+  </select></form>
+</div>
+{% if res %}
+<div class="grid md:grid-cols-3 gap-4">
+  <div class="glossy rounded-xl p-4 md:col-span-2"><canvas id="radar" height="220"></canvas></div>
+  <div class="glossy rounded-xl p-4">
+    <h3 class="text-sm font-semibold text-white mb-3">Score vs Target ({{ '%.2f'|format(TARGET) }})</h3>
+    {% for v in VALUES %}
+    {% set gap = res[v]-TARGET %}
+    <div class="flex items-center justify-between text-xs py-1.5 border-b border-white/5">
+      <span class="text-slate-300">{{ VALUE_LABELS[v] }}</span>
+      <span class="font-mono {{ 'text-rose-300' if gap<0 else 'text-emerald-300' }}">{{ '%.2f'|format(res[v]) }} ({{ '%+.2f'|format(gap) }})</span>
+    </div>{% endfor %}
+  </div>
+</div>
+<script>
+new Chart(radar,{type:'radar',data:{labels:{{ (VALUE_LABELS.values()|list)|tojson }},
+  datasets:[
+    {label:'Actual',data:{{ [res['amanah'],res['kompeten'],res['harmonis'],res['loyal'],res['adaptif']]|tojson }},
+     borderColor:'#22d3ee',backgroundColor:'rgba(34,211,238,.2)'},
+    {label:'Target',data:[{{ TARGET }},{{ TARGET }},{{ TARGET }},{{ TARGET }},{{ TARGET }}],
+     borderColor:'#64748b',borderDash:[5,5],backgroundColor:'transparent'}]},
+  options:{scales:{r:{min:0,max:5,grid:{color:'#1e293b'},angleLines:{color:'#1e293b'},
+    pointLabels:{color:'#cbd5e1'},ticks:{display:false}}},plugins:{legend:{labels:{color:'#94a3b8'}}}}});
+</script>
+{% else %}<p class="text-sm text-slate-400">No consolidated result for this employee yet.</p>{% endif %}
+{% endblock %}

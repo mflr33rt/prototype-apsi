@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block heading %}Evaluation Period{% endblock %}
+{% block body %}
+<div class="flex items-center justify-between mb-5">
+  <h2 class="text-lg font-bold text-white">Evaluation Periods</h2>
+  <button onclick="document.getElementById('pb').classList.toggle('hidden')" class="btn"><i class="fa-solid fa-plus mr-1"></i>New Period</button>
+</div>
+<div id="pb" class="hidden glossy rounded-xl p-4 mb-5">
+  <form method="post" class="grid md:grid-cols-4 gap-3 items-end">
+    <div class="md:col-span-2"><label class="text-[11px] text-slate-400">Period name</label><input name="name" class="inp mt-1" required></div>
+    <div><label class="text-[11px] text-slate-400">Start</label><input name="start_date" type="date" class="inp mt-1"></div>
+    <div><label class="text-[11px] text-slate-400">End</label><input name="end_date" type="date" class="inp mt-1"></div>
+    <button class="btn">Create</button>
+  </form>
+</div>
+<table class="w-full text-sm">
+  <thead><tr class="text-[11px] uppercase text-slate-500 text-left border-b border-white/5">
+    <th class="py-2">Name</th><th>Start</th><th>End</th><th>Status</th><th>Actions</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr class="border-b border-white/5">
+      <td class="py-3 font-semibold text-white">{{ r['name'] }}</td>
+      <td class="text-slate-400">{{ r['start_date'] or '—' }}</td>
+      <td class="text-slate-400">{{ r['end_date'] or '—' }}</td>
+      <td><span class="px-2 py-0.5 rounded-full text-[11px] font-semibold
+        {{ 'bg-emerald-500/15 text-emerald-300' if r['status']=='active'
+           else 'bg-slate-500/15 text-slate-300' if r['status']=='draft'
+           else 'bg-rose-500/15 text-rose-300' }}">{{ r['status'] }}</span></td>
+      <td class="space-x-2">
+        {% if r['status']!='active' %}<a href="{{ url_for('period_action',pid=r['id'],action='activate') }}" class="btn-ghost">Activate</a>{% endif %}
+        {% if r['status']=='active' %}<a href="{{ url_for('period_action',pid=r['id'],action='close') }}" class="btn-ghost">Close</a>{% endif %}
+      </td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

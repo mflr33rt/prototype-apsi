@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block heading %}Evaluation History{% endblock %}
+{% block body %}
+<h2 class="text-lg font-bold text-white mb-4">Evaluation History</h2>
+<table class="w-full text-sm">
+  <thead><tr class="text-[11px] uppercase text-slate-500 text-left border-b border-white/5">
+    <th class="py-2">Period</th><th>Start</th><th>End</th><th>Status</th><th class="text-center">Employees scored</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr class="border-b border-white/5">
+      <td class="py-3 font-semibold text-white">{{ r['name'] }}</td>
+      <td class="text-slate-400">{{ r['start_date'] or '—' }}</td>
+      <td class="text-slate-400">{{ r['end_date'] or '—' }}</td>
+      <td class="text-slate-300">{{ r['status'] }}</td>
+      <td class="text-center text-cyan-300">{{ r['n'] }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
