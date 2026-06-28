@@ -2,7 +2,8 @@
 {% block heading %}Fill Assessment{% endblock %}
 {% block body %}
 <h2 class="text-lg font-bold text-white mb-1">Assigned Evaluations</h2>
-<p class="text-xs text-slate-400 mb-5">{{ period['name'] }} — your responses are anonymous.</p>
+<p class="text-xs text-slate-400 mb-1">{{ period['name'] }} — your responses are anonymous.</p>
+<p class="text-[11px] text-slate-500 mb-5"><i class="fa-solid fa-circle-info mr-1 text-cyan-400"></i>You are signed in as an <strong>evaluator</strong>: assess the people assigned to you (self, supervisor, peer, or subordinate), then submit.</p>
 <div class="grid md:grid-cols-2 gap-3">
 {% for r in rows %}
   <div class="glossy rounded-xl p-4 flex items-center justify-between">

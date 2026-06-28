@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block heading %}Performance Trends{% endblock %}
+{% block body %}
+<h2 class="text-lg font-bold text-white mb-1">Performance Trends</h2>
+<p class="text-xs text-slate-400 mb-5">Organisation-wide average overall score across evaluation periods.</p>
+<div class="glossy rounded-xl p-4"><canvas id="trend" height="150"></canvas></div>
+<script>
+new Chart(trend,{type:'line',data:{labels:{{ rows|map(attribute='name')|list|tojson }},
+  datasets:[{label:'Avg overall',data:{{ rows|map(attribute='avg_overall')|list|tojson }},
+    borderColor:'#22d3ee',backgroundColor:'rgba(34,211,238,.15)',fill:true,tension:.35,pointRadius:5}]},
+  options:{plugins:{legend:{labels:{color:'#94a3b8'}}},
+    scales:{y:{min:3,max:5,ticks:{color:'#64748b'}},x:{ticks:{color:'#94a3b8'}}}}});
+</script>
+{% endblock %}

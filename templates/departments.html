@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block heading %}Department Comparison{% endblock %}
+{% block body %}
+<h2 class="text-lg font-bold text-white mb-1">Department Comparison</h2>
+<p class="text-xs text-slate-400 mb-5">{{ period['name'] }}</p>
+<div class="grid md:grid-cols-2 gap-4 mb-5">
+  <div class="glossy rounded-xl p-4"><canvas id="dep" height="180"></canvas></div>
+  <div class="glossy rounded-xl p-4">
+    <table class="w-full text-xs">
+      <thead><tr class="uppercase text-slate-500 text-left border-b border-white/5">
+        <th class="py-2">Department</th><th class="text-center">People</th>
+        {% for v in VALUES %}<th class="text-center">{{ VALUE_LABELS[v][:3] }}</th>{% endfor %}
+        <th class="text-center">Overall</th></tr></thead>
+      <tbody>
+      {% for r in rows %}
+        <tr class="border-b border-white/5">
+          <td class="py-2 font-semibold text-white">{{ r['department'] }}</td>
+          <td class="text-center text-slate-400">{{ r['n'] }}</td>
+          {% for v in VALUES %}<td class="text-center text-slate-300">{{ '%.2f'|format(r[v]) }}</td>{% endfor %}
+          <td class="text-center font-bold text-cyan-300">{{ '%.2f'|format(r['overall']) }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<script>
+new Chart(dep,{type:'bar',data:{labels:{{ rows|map(attribute='department')|list|tojson }},
+  datasets:[{label:'Avg overall',data:{{ rows|map(attribute='overall')|list|tojson }},
+    backgroundColor:['#0ea5e9','#6366f1','#14b8a6','#f59e0b']}]},
+  options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:5,ticks:{color:'#64748b'}},x:{ticks:{color:'#94a3b8'}}}}});
+</script>
+{% endblock %}

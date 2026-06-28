@@ -80,7 +80,7 @@ def index():
     if not g.user:
         return redirect(url_for("login"))
     if g.user["role"] == "employee":
-        return redirect(url_for("my_assignments"))
+        return redirect(url_for("my_dashboard"))
     return redirect(url_for("dashboard"))
 
 
@@ -465,7 +465,7 @@ def history():
 
 
 @app.route("/audit")
-@require("admin")
+@require("admin", "hr")
 def audit():
     rows = g.db.execute("SELECT * FROM audit ORDER BY id DESC LIMIT 200").fetchall()
     return render_template("audit.html", rows=rows)
@@ -475,13 +475,128 @@ def audit():
 @require("employee")
 def feedback():
     period = active_period()
-    res = g.db.execute("SELECT * FROM results WHERE period_id=? AND employee_id=?",
-                       (period["id"], g.user["employee_id"])).fetchone()
     comments = g.db.execute(
         "SELECT r.comment FROM responses r JOIN assignments a ON r.assignment_id=a.id "
         "WHERE a.period_id=? AND a.assessee_id=? AND r.comment != ''",
         (period["id"], g.user["employee_id"])).fetchall()
-    return render_template("feedback.html", res=res, comments=comments, period=period)
+    return render_template("feedback.html", comments=comments, period=period)
+
+
+@app.route("/my-dashboard")
+@require("employee")
+def my_dashboard():
+    """Employee self-assessor: personal dashboard."""
+    period = active_period()
+    res = g.db.execute("SELECT * FROM results WHERE period_id=? AND employee_id=?",
+                       (period["id"], g.user["employee_id"])).fetchone()
+    assigned = g.db.execute(
+        "SELECT COUNT(*) c FROM assignments WHERE period_id=? AND evaluator_id=? "
+        "AND approval_status='approved'", (period["id"], g.user["employee_id"])).fetchone()["c"]
+    submitted = g.db.execute(
+        "SELECT COUNT(*) c FROM assignments WHERE period_id=? AND evaluator_id=? "
+        "AND approval_status='approved' AND submitted=1",
+        (period["id"], g.user["employee_id"])).fetchone()["c"]
+    below = len([v for v in VALUES if res and res[v] < CORPORATE_TARGET]) if res else 0
+    return render_template("my_dashboard.html", res=res, period=period,
+                           assigned=assigned, submitted=submitted,
+                           pending=assigned - submitted, below=below)
+
+
+@app.route("/my-results")
+@require("employee")
+def my_results():
+    """Employee self-assessor: view own personal assessment result."""
+    period = active_period()
+    res = g.db.execute("SELECT * FROM results WHERE period_id=? AND employee_id=?",
+                       (period["id"], g.user["employee_id"])).fetchone()
+    return render_template("my_results.html", res=res, period=period)
+
+
+@app.route("/export.csv")
+@require("admin", "hr")
+def export_data():
+    """HR/ADMIN: export consolidated results as raw CSV data."""
+    import csv
+    period = active_period()
+    rows = g.db.execute(
+        "SELECT e.nip, e.full_name, e.position, e.department, r.amanah, r.kompeten, "
+        "r.harmonis, r.loyal, r.adaptif, r.overall FROM results r "
+        "JOIN employees e ON r.employee_id=e.id WHERE r.period_id=? ORDER BY e.full_name",
+        (period["id"],)).fetchall()
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(["NIP", "Name", "Position", "Department"] +
+               [VALUE_LABELS[v] for v in VALUES] + ["Overall"])
+    for r in rows:
+        w.writerow([r["nip"], r["full_name"], r["position"], r["department"]] +
+                   [r[v] for v in VALUES] + [r["overall"]])
+    log_audit(g.db, g.user["username"], "EXPORT_DATA", f"{len(rows)} rows exported.")
+    g.db.commit()
+    fname = f"assessment_data_period_{period['id']}.csv"
+    return Response(buf.getvalue(), mimetype="text/csv",
+                    headers={"Content-Disposition": f"attachment; filename={fname}"})
+
+
+@app.route("/my-idp")
+@require("employee")
+def my_idp():
+    """Employee self-assessor: view own Individual Development Plan."""
+    period = active_period()
+    res = g.db.execute("SELECT * FROM results WHERE period_id=? AND employee_id=?",
+                       (period["id"], g.user["employee_id"])).fetchone()
+    gaps = []
+    if res:
+        gaps = [(VALUE_LABELS[v], round(res[v] - CORPORATE_TARGET, 2))
+                for v in VALUES if res[v] < CORPORATE_TARGET]
+        gaps.sort(key=lambda x: x[1])
+    return render_template("my_idp.html", res=res, gaps=gaps, period=period)
+
+
+@app.route("/trends")
+@require("admin", "hr", "management")
+def trends():
+    """Management: organisation-wide performance trend across periods."""
+    rows = g.db.execute(
+        "SELECT p.name, ROUND(AVG(r.overall),2) avg_overall, COUNT(*) n "
+        "FROM results r JOIN periods p ON r.period_id=p.id "
+        "GROUP BY p.id ORDER BY p.start_date").fetchall()
+    return render_template("trends.html", rows=rows)
+
+
+@app.route("/departments")
+@require("admin", "hr", "management")
+def departments():
+    """Management: compare average scores between departments."""
+    period = active_period()
+    rows = g.db.execute(
+        "SELECT e.department, COUNT(*) n, ROUND(AVG(r.overall),2) overall, "
+        "ROUND(AVG(r.amanah),2) amanah, ROUND(AVG(r.kompeten),2) kompeten, "
+        "ROUND(AVG(r.harmonis),2) harmonis, ROUND(AVG(r.loyal),2) loyal, "
+        "ROUND(AVG(r.adaptif),2) adaptif "
+        "FROM results r JOIN employees e ON r.employee_id=e.id "
+        "WHERE r.period_id=? GROUP BY e.department ORDER BY overall DESC",
+        (period["id"],)).fetchall()
+    return render_template("departments.html", rows=rows, period=period)
+
+
+@app.route("/reminders/send")
+@require("admin", "hr")
+def reminders_send():
+    """HR/Admin: send a reminder to every evaluator with pending forms (SR-10)."""
+    period = active_period()
+    rows = g.db.execute(
+        "SELECT DISTINCT u.id uid FROM assignments a "
+        "JOIN users u ON u.employee_id = a.evaluator_id "
+        "WHERE a.period_id=? AND a.approval_status='approved' AND a.submitted=0",
+        (period["id"],)).fetchall()
+    for r in rows:
+        add_notification(g.db, "Reminder: you still have pending assessment forms to "
+                               "complete before the period closes.", user_id=r["uid"])
+    log_audit(g.db, g.user["username"], "SEND_REMINDER",
+              f"{len(rows)} evaluator(s) with pending forms reminded.")
+    g.db.commit()
+    flash(f"Reminders sent to {len(rows)} evaluator(s) with pending forms.", "ok")
+    return redirect(url_for("notifications"))
 
 
 @app.route("/profile", methods=["POST"])

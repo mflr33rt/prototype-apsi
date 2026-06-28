@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block heading %}Dashboard{% endblock %}
+{% block body %}
+<h2 class="text-lg font-bold text-white mb-1">My Dashboard</h2>
+<p class="text-xs text-slate-400 mb-5">{{ period['name'] }} — your personal overview.</p>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+  <div class="glossy rounded-xl p-4"><div class="text-[11px] text-slate-400 uppercase tracking-wide"><i class="fa-solid fa-star text-cyan-400 mr-1"></i>My Overall</div>
+    <div class="text-2xl font-bold text-white mt-1">{{ '%.2f'|format(res['overall']) if res else '—' }}</div></div>
+  <div class="glossy rounded-xl p-4"><div class="text-[11px] text-slate-400 uppercase tracking-wide"><i class="fa-solid fa-list-check text-cyan-400 mr-1"></i>Forms Assigned</div>
+    <div class="text-2xl font-bold text-white mt-1">{{ assigned }}</div></div>
+  <div class="glossy rounded-xl p-4"><div class="text-[11px] text-slate-400 uppercase tracking-wide"><i class="fa-solid fa-hourglass-half text-cyan-400 mr-1"></i>Pending</div>
+    <div class="text-2xl font-bold {{ 'text-amber-300' if pending else 'text-white' }} mt-1">{{ pending }}</div></div>
+  <div class="glossy rounded-xl p-4"><div class="text-[11px] text-slate-400 uppercase tracking-wide"><i class="fa-solid fa-arrow-trend-up text-cyan-400 mr-1"></i>Focus Areas</div>
+    <div class="text-2xl font-bold {{ 'text-rose-300' if below else 'text-white' }} mt-1">{{ below }}</div></div>
+</div>
+<div class="grid md:grid-cols-3 gap-3">
+  {% for ep,icon,title,desc in [
+    ('my_assignments','fa-pen-to-square','Fill Assessment','Complete forms assigned to you'),
+    ('my_results','fa-square-poll-vertical','My Results','See your AKHLAK scores'),
+    ('my_idp','fa-graduation-cap','My IDP','Your development plan')] %}
+  <a href="{{ url_for(ep) }}" class="glossy rounded-xl p-4 hover:border-cyan-500/40 transition block">
+    <i class="fa-solid {{icon}} text-cyan-400 text-lg"></i>
+    <div class="text-sm font-semibold text-white mt-2">{{ title }}</div>
+    <div class="text-[11px] text-slate-400">{{ desc }}</div></a>
+  {% endfor %}
+</div>
+{% if pending %}<p class="text-xs text-amber-300 mt-4"><i class="fa-solid fa-circle-exclamation mr-1"></i>You have {{ pending }} assessment form(s) still to submit.</p>{% endif %}
+{% endblock %}

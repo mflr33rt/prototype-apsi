@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block heading %}My Results{% endblock %}
+{% block body %}
+<h2 class="text-lg font-bold text-white mb-1">My Personal Assessment Result</h2>
+<p class="text-xs text-slate-400 mb-5">{{ period['name'] }}</p>
+{% if res %}
+<div class="grid md:grid-cols-3 gap-4">
+  <div class="glossy rounded-xl p-4 md:col-span-2"><canvas id="radar" height="220"></canvas></div>
+  <div class="glossy rounded-xl p-4">
+    <div class="flex items-center justify-between mb-3 pb-3 border-b border-white/5">
+      <span class="text-sm text-slate-300">Overall</span>
+      <span class="text-xl font-bold text-cyan-300">{{ '%.2f'|format(res['overall']) }}</span></div>
+    {% for v in VALUES %}
+    <div class="flex items-center justify-between text-xs py-1.5">
+      <span class="text-slate-300">{{ VALUE_LABELS[v] }}</span>
+      <span class="font-mono {{ 'text-rose-300' if res[v]<TARGET else 'text-slate-200' }}">{{ '%.2f'|format(res[v]) }}</span></div>
+    {% endfor %}
+  </div>
+</div>
+<script>
+new Chart(radar,{type:'radar',data:{labels:{{ (VALUE_LABELS.values()|list)|tojson }},
+  datasets:[
+    {label:'My score',data:{{ [res['amanah'],res['kompeten'],res['harmonis'],res['loyal'],res['adaptif']]|tojson }},
+     borderColor:'#22d3ee',backgroundColor:'rgba(34,211,238,.2)'},
+    {label:'Target',data:[{{ TARGET }},{{ TARGET }},{{ TARGET }},{{ TARGET }},{{ TARGET }}],
+     borderColor:'#64748b',borderDash:[5,5],backgroundColor:'transparent'}]},
+  options:{scales:{r:{min:0,max:5,grid:{color:'#1e293b'},angleLines:{color:'#1e293b'},
+    pointLabels:{color:'#cbd5e1'},ticks:{display:false}}},plugins:{legend:{labels:{color:'#94a3b8'}}}}});
+</script>
+{% else %}<p class="text-sm text-slate-400">Your results aren't available yet — evaluations may still be in progress.</p>{% endif %}
+{% endblock %}

@@ -149,6 +149,8 @@ def init_db():
         ("102012340259", "Muhammad Fahmi", "Project Manager", "Project FRI-142", None),
         ("102012340269", "Nadia Kunanti", "Project Team", "Project FRI-142", "102012340259"),
         ("102012340370", "Sasi Azhari Kirana Putri", "Project Team", "Project FRI-142", "102012340259"),
+        ("102012340401", "Budi Santoso", "Operations Manager", "Operations", None),
+        ("102012340402", "Citra Dewi", "Operations Staff", "Operations", "102012340401"),
     ]
     nip_to_id = {}
     for nip, name, pos, dept, _ in employees:
@@ -198,6 +200,8 @@ def init_db():
     seed_scores = {
         "102012340259": [4.60, 4.20, 4.10, 4.70, 4.30],  # Fahmi
         "102012340269": [4.10, 4.60, 4.30, 4.00, 4.50],  # Nadia
+        "102012340401": [4.50, 4.40, 4.20, 4.30, 4.10],  # Budi (Operations)
+        "102012340402": [3.90, 4.10, 4.00, 3.80, 4.20],  # Citra (Operations)
     }
     for nip, scores in seed_scores.items():
         emp_id = nip_to_id[nip]
@@ -214,6 +218,26 @@ def init_db():
             conn.execute("UPDATE assignments SET submitted=1 WHERE id=?", (r["id"],))
 
     consolidate(conn, period_id, actor="system")  # compute initial results
+
+    # Previous (closed) period with historical results -> enables Performance Trends.
+    prev = conn.execute(
+        "INSERT INTO periods (name, start_date, end_date, status) VALUES (?,?,?,?)",
+        ("Evaluation Period 2025 - Semester 2", "2025-09-01", "2025-12-31", "closed")
+    ).lastrowid
+    history_scores = {
+        "102012340259": [4.30, 4.00, 3.90, 4.40, 4.10],  # Fahmi (lower -> improved since)
+        "102012340269": [3.80, 4.30, 4.00, 3.70, 4.20],  # Nadia
+        "102012340401": [4.20, 4.10, 4.00, 4.10, 3.90],  # Budi
+        "102012340402": [3.60, 3.90, 3.80, 3.60, 4.00],  # Citra
+    }
+    for nip, sc in history_scores.items():
+        eid = nip_to_id[nip]
+        overall = round(sum(sc) / len(sc), 2)
+        conn.execute(
+            "INSERT INTO results (period_id, employee_id, amanah, kompeten, harmonis, "
+            "loyal, adaptif, overall, computed_at) VALUES (?,?,?,?,?,?,?,?,?)",
+            (prev, eid, *sc, overall, now()))
+
     log_audit(conn, "system", "INIT", "Database initialised and seeded.")
     conn.commit()
     conn.close()

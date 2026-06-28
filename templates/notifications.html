@@ -2,6 +2,13 @@
 {% block heading %}Notifications{% endblock %}
 {% block body %}
 <h2 class="text-lg font-bold text-white mb-4">Notifications <span class="text-xs text-cyan-400 font-mono">SR-10</span></h2>
+{% if user['role'] in ['admin','hr'] %}
+<div class="glossy rounded-xl p-4 mb-4 flex items-center justify-between">
+  <div><div class="text-sm font-semibold text-white">Manage notifications</div>
+    <div class="text-[11px] text-slate-400">Nudge evaluators who still have pending forms.</div></div>
+  <a href="{{ url_for('reminders_send') }}" class="btn"><i class="fa-solid fa-paper-plane mr-1"></i>Send Reminders</a>
+</div>
+{% endif %}
 <div class="space-y-2">
 {% for r in rows %}
   <div class="glossy rounded-xl px-4 py-3 flex items-center gap-3">

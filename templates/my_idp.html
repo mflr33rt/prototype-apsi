@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block heading %}My IDP{% endblock %}
+{% block body %}
+<h2 class="text-lg font-bold text-white mb-1">My Individual Development Plan</h2>
+<p class="text-xs text-slate-400 mb-5">{{ period['name'] }} — based on your own AKHLAK results.</p>
+{% if res %}
+<div class="glossy rounded-xl p-5 max-w-2xl">
+  <div class="flex items-center justify-between mb-4">
+    <span class="text-sm text-slate-300">Overall score</span>
+    <span class="text-xl font-bold text-cyan-300">{{ '%.2f'|format(res['overall']) }}</span>
+  </div>
+  {% if gaps %}
+    <p class="text-[11px] text-slate-400 mb-2 uppercase tracking-wide">Focus areas (below target {{ '%.2f'|format(TARGET) }})</p>
+    <ul class="space-y-2">
+    {% for label,gap in gaps %}
+      <li class="flex items-center gap-3 bg-slate-950/40 rounded-lg px-3 py-2.5">
+        <i class="fa-solid fa-arrow-trend-up text-amber-400"></i>
+        <span class="text-sm text-white flex-grow">Strengthen <strong>{{ label }}</strong></span>
+        <span class="text-rose-300 font-mono text-xs">{{ '%+.2f'|format(gap) }}</span></li>
+    {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-sm text-emerald-300"><i class="fa-solid fa-circle-check mr-1"></i>You meet every target. Keep it up and consider mentoring peers.</p>
+  {% endif %}
+</div>
+{% else %}<p class="text-sm text-slate-400">Your results aren't available yet — evaluations may still be in progress.</p>{% endif %}
+{% endblock %}

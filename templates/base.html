@@ -39,18 +39,24 @@
           <i class="fa-solid {{ icon }} w-4"></i><span>{{ label }}</span></a>
       {% endmacro %}
       {% if R in ['admin','hr','management'] %}{{ link('dashboard','fa-chart-line','Dashboard') }}{% endif %}
+      {% if R == 'employee' %}{{ link('my_dashboard','fa-chart-line','Dashboard') }}{% endif %}
       {% if R in ['admin','hr'] %}{{ link('employees','fa-users-gear','Employee Data') }}{% endif %}
       {% if R in ['admin','hr'] %}{{ link('periods','fa-calendar-days','Evaluation Period') }}{% endif %}
       {% if R in ['admin','hr'] %}{{ link('evaluators','fa-user-check','Evaluator Approval') }}{% endif %}
       {% if R == 'employee' %}{{ link('my_assignments','fa-pen-to-square','Fill Assessment') }}{% endif %}
+      {% if R == 'employee' %}{{ link('my_results','fa-square-poll-vertical','My Results') }}{% endif %}
       {% if R in ['admin','hr','management'] %}{{ link('results','fa-square-poll-vertical','Assessment Results') }}{% endif %}
       {% if R in ['admin','hr','management'] %}{{ link('gap','fa-chart-gantt','Gap Analysis') }}{% endif %}
-      {% if R in ['admin','hr','management'] %}{{ link('idp','fa-graduation-cap','IDP Recommendations') }}{% endif %}
+      {% if R in ['admin','hr','management'] %}{{ link('trends','fa-arrow-trend-up','Performance Trends') }}{% endif %}
+      {% if R in ['admin','hr','management'] %}{{ link('departments','fa-layer-group','Department Comparison') }}{% endif %}
+      {% if R in ['admin','hr','management'] %}{{ link('idp','fa-graduation-cap', 'IDP Summary' if R=='management' else 'IDP Recommendations') }}{% endif %}
       {% if R in ['admin','hr','management'] %}{{ link('reports','fa-file-lines','Evaluation Reports') }}{% endif %}
       {% if R == 'employee' %}{{ link('feedback','fa-comment-dots','My Feedback') }}{% endif %}
+      {% if R == 'employee' %}{{ link('my_idp','fa-graduation-cap','My IDP') }}{% endif %}
       {{ link('notifications','fa-bell','Notifications') }}
+      {% if R in ['admin','hr'] %}<a href="{{ url_for('export_data') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl navlink"><i class="fa-solid fa-file-csv w-4"></i><span>Export Data</span></a>{% endif %}
       {% if R in ['admin','hr','management'] %}{{ link('history','fa-clock-rotate-left','Evaluation History') }}{% endif %}
-      {% if R == 'admin' %}{{ link('audit','fa-shield-halved','Audit Trail') }}{% endif %}
+      {% if R in ['admin','hr'] %}{{ link('audit','fa-shield-halved','Audit Trail') }}{% endif %}
     </nav>
     <a href="{{ url_for('logout') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl navlink text-xs font-semibold mt-2">
       <i class="fa-solid fa-arrow-right-from-bracket w-4"></i><span>Logout</span></a>
