@@ -23,9 +23,9 @@
 <script>
 new Chart(radar,{type:'radar',data:{labels:{{ (VALUE_LABELS.values()|list)|tojson }},
   datasets:[
-    {label:'Actual',data:{{ [res['amanah'],res['kompeten'],res['harmonis'],res['loyal'],res['adaptif']]|tojson }},
+    {label:'Actual',data:[{% for v in VALUES %}{{ res[v] }}{% if not loop.last %},{% endif %}{% endfor %}],
      borderColor:'#22d3ee',backgroundColor:'rgba(34,211,238,.2)'},
-    {label:'Target',data:[{{ TARGET }},{{ TARGET }},{{ TARGET }},{{ TARGET }},{{ TARGET }}],
+    {label:'Target',data:[{% for v in VALUES %}{{ TARGET }}{% if not loop.last %},{% endif %}{% endfor %}],
      borderColor:'#64748b',borderDash:[5,5],backgroundColor:'transparent'}]},
   options:{scales:{r:{min:0,max:5,grid:{color:'#1e293b'},angleLines:{color:'#1e293b'},
     pointLabels:{color:'#cbd5e1'},ticks:{display:false}}},plugins:{legend:{labels:{color:'#94a3b8'}}}}});

@@ -15,17 +15,18 @@ from werkzeug.security import generate_password_hash
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "feedback360.db")
 
-# AKHLAK Core Values as documented in the report (5 indicators).
-# NOTE: The official BUMN AKHLAK has a 6th value, "Kolaboratif". It is left
-# out here on purpose to stay consistent with the system-design document.
-# If you add it, add it to BOTH the report and here so they never diverge.
-VALUES = ["amanah", "kompeten", "harmonis", "loyal", "adaptif"]
+# AKHLAK Core Values (6 indicators, including Kolaboratif).
+# Order follows the AKHLAK acronym: Amanah, Kompeten, Harmonis, Loyal, Adaptif,
+# Kolaboratif. Adding/removing a value here propagates through the seed, queries,
+# CSV export and PDF automatically; only the SQL schema columns below are explicit.
+VALUES = ["amanah", "kompeten", "harmonis", "loyal", "adaptif", "kolaboratif"]
 VALUE_LABELS = {
     "amanah": "Amanah",
     "kompeten": "Kompeten",
     "harmonis": "Harmonis",
     "loyal": "Loyal",
     "adaptif": "Adaptif",
+    "kolaboratif": "Kolaboratif",
 }
 CORPORATE_TARGET = 4.00  # standard each indicator is compared against
 
@@ -81,7 +82,7 @@ CREATE TABLE assignments (
 CREATE TABLE responses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     assignment_id INTEGER NOT NULL REFERENCES assignments(id),
-    amanah REAL, kompeten REAL, harmonis REAL, loyal REAL, adaptif REAL,
+    amanah REAL, kompeten REAL, harmonis REAL, loyal REAL, adaptif REAL, kolaboratif REAL,
     comment TEXT,
     submitted_at TEXT
 );
@@ -90,7 +91,7 @@ CREATE TABLE results (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     period_id INTEGER NOT NULL REFERENCES periods(id),
     employee_id INTEGER NOT NULL REFERENCES employees(id),
-    amanah REAL, kompeten REAL, harmonis REAL, loyal REAL, adaptif REAL,
+    amanah REAL, kompeten REAL, harmonis REAL, loyal REAL, adaptif REAL, kolaboratif REAL,
     overall REAL,
     computed_at TEXT
 );
@@ -198,10 +199,10 @@ def init_db():
     # --- Seed completed responses for Fahmi & Nadia (matches the report data),
     #     leave Sasi unfilled so the live "fill -> recalculate" demo works ---
     seed_scores = {
-        "102012340259": [4.60, 4.20, 4.10, 4.70, 4.30],  # Fahmi
-        "102012340269": [4.10, 4.60, 4.30, 4.00, 4.50],  # Nadia
-        "102012340401": [4.50, 4.40, 4.20, 4.30, 4.10],  # Budi (Operations)
-        "102012340402": [3.90, 4.10, 4.00, 3.80, 4.20],  # Citra (Operations)
+        "102012340259": [4.60, 4.20, 4.10, 4.70, 4.30, 4.40],  # Fahmi
+        "102012340269": [4.10, 4.60, 4.30, 4.00, 4.50, 4.20],  # Nadia
+        "102012340401": [4.50, 4.40, 4.20, 4.30, 4.10, 4.30],  # Budi (Operations)
+        "102012340402": [3.90, 4.10, 4.00, 3.80, 4.20, 3.95],  # Citra (Operations)
     }
     for nip, scores in seed_scores.items():
         emp_id = nip_to_id[nip]
@@ -210,9 +211,11 @@ def init_db():
             (period_id, emp_id),
         ).fetchall()
         for r in rows:
+            cols = ", ".join(VALUES)
+            ph = ", ".join("?" * len(VALUES))
             conn.execute(
-                "INSERT INTO responses (assignment_id, amanah, kompeten, harmonis, loyal, "
-                "adaptif, comment, submitted_at) VALUES (?,?,?,?,?,?,?,?)",
+                f"INSERT INTO responses (assignment_id, {cols}, comment, submitted_at) "
+                f"VALUES (?, {ph}, ?, ?)",
                 (r["id"], *scores, "Seeded evaluation.", now()),
             )
             conn.execute("UPDATE assignments SET submitted=1 WHERE id=?", (r["id"],))
@@ -225,17 +228,19 @@ def init_db():
         ("Evaluation Period 2025 - Semester 2", "2025-09-01", "2025-12-31", "closed")
     ).lastrowid
     history_scores = {
-        "102012340259": [4.30, 4.00, 3.90, 4.40, 4.10],  # Fahmi (lower -> improved since)
-        "102012340269": [3.80, 4.30, 4.00, 3.70, 4.20],  # Nadia
-        "102012340401": [4.20, 4.10, 4.00, 4.10, 3.90],  # Budi
-        "102012340402": [3.60, 3.90, 3.80, 3.60, 4.00],  # Citra
+        "102012340259": [4.30, 4.00, 3.90, 4.40, 4.10, 4.10],  # Fahmi (lower -> improved since)
+        "102012340269": [3.80, 4.30, 4.00, 3.70, 4.20, 3.90],  # Nadia
+        "102012340401": [4.20, 4.10, 4.00, 4.10, 3.90, 4.05],  # Budi
+        "102012340402": [3.60, 3.90, 3.80, 3.60, 4.00, 3.70],  # Citra
     }
     for nip, sc in history_scores.items():
         eid = nip_to_id[nip]
         overall = round(sum(sc) / len(sc), 2)
+        cols = ", ".join(VALUES)
+        ph = ", ".join("?" * len(VALUES))
         conn.execute(
-            "INSERT INTO results (period_id, employee_id, amanah, kompeten, harmonis, "
-            "loyal, adaptif, overall, computed_at) VALUES (?,?,?,?,?,?,?,?,?)",
+            f"INSERT INTO results (period_id, employee_id, {cols}, overall, computed_at) "
+            f"VALUES (?, ?, {ph}, ?, ?)",
             (prev, eid, *sc, overall, now()))
 
     log_audit(conn, "system", "INIT", "Database initialised and seeded.")
@@ -294,11 +299,12 @@ def consolidate(conn, period_id, actor="system"):
             continue
         avg = {v: round(sum(row[v] for row in rows) / len(rows), 2) for v in VALUES}
         overall = round(sum(avg.values()) / len(VALUES), 2)
+        cols = ", ".join(VALUES)
+        ph = ", ".join("?" * len(VALUES))
         conn.execute(
-            "INSERT INTO results (period_id, employee_id, amanah, kompeten, harmonis, "
-            "loyal, adaptif, overall, computed_at) VALUES (?,?,?,?,?,?,?,?,?)",
-            (period_id, e["id"], avg["amanah"], avg["kompeten"], avg["harmonis"],
-             avg["loyal"], avg["adaptif"], overall, now()),
+            f"INSERT INTO results (period_id, employee_id, {cols}, overall, computed_at) "
+            f"VALUES (?, ?, {ph}, ?, ?)",
+            (period_id, e["id"], *[avg[v] for v in VALUES], overall, now()),
         )
     log_audit(conn, actor, "CONSOLIDATE", f"Scores consolidated for period {period_id}.")
 

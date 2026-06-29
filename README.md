@@ -30,7 +30,7 @@ Open the URL, then use a **Fast-Track Login** button on the sign-in page.
 
 Passwords are stored **hashed** in the database, never in the page source.
 
-## Suggested demo flow (matches SR-01 → SR-12)
+## Suggested demo flow (matches SR-01 -> SR-12)
 
 1. **HR** → Employee Data (add one) → Evaluation Period → Evaluator Approval →
    *Generate List* then *Approve & Distribute*.
@@ -41,11 +41,3 @@ Passwords are stored **hashed** in the database, never in the page source.
 5. **Admin** → Audit Trail to show every action was logged.
 
 To reset to the starting state, re-run `python database.py`.
-
----
-
-## Catatan tentang nilai-nilai AKHLAK
-Aplikasi ini menggunakan **5 indikator yang didokumentasikan dalam laporan kami** (Amanah, Kompeten,
-Harmonis, Loyal, Adaptif). BUMN AKHLAK resmi memiliki indikator ke-6, *Kolaboratif*. Jika kita
-memutuskan untuk menambahkannya, indikator tersebut harus ditambahkan ke dalam laporan dan kode agar desain dan
-prototipe tetap konsisten.

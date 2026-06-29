@@ -273,11 +273,12 @@ def assess(aid):
         abort(403)
     if request.method == "POST":
         scores = {v: float(request.form[v]) for v in VALUES}
+        cols = ", ".join(VALUES)
+        ph = ", ".join("?" * len(VALUES))
         g.db.execute(
-            "INSERT INTO responses (assignment_id, amanah, kompeten, harmonis, loyal, "
-            "adaptif, comment, submitted_at) VALUES (?,?,?,?,?,?,?,?)",
-            (aid, scores["amanah"], scores["kompeten"], scores["harmonis"],
-             scores["loyal"], scores["adaptif"], request.form.get("comment", ""), now()))
+            f"INSERT INTO responses (assignment_id, {cols}, comment, submitted_at) "
+            f"VALUES (?, {ph}, ?, ?)",
+            (aid, *[scores[v] for v in VALUES], request.form.get("comment", ""), now()))
         g.db.execute("UPDATE assignments SET submitted=1 WHERE id=?", (aid,))
         add_notification(g.db, "A new assessment form was submitted.", role="hr")
         log_audit(g.db, g.user["username"], "SUBMIT_FORM", f"Assignment {aid}")
@@ -518,10 +519,11 @@ def export_data():
     """HR/ADMIN: export consolidated results as raw CSV data."""
     import csv
     period = active_period()
+    valcols = ", ".join(f"r.{v}" for v in VALUES)
     rows = g.db.execute(
-        "SELECT e.nip, e.full_name, e.position, e.department, r.amanah, r.kompeten, "
-        "r.harmonis, r.loyal, r.adaptif, r.overall FROM results r "
-        "JOIN employees e ON r.employee_id=e.id WHERE r.period_id=? ORDER BY e.full_name",
+        f"SELECT e.nip, e.full_name, e.position, e.department, {valcols}, r.overall "
+        f"FROM results r JOIN employees e ON r.employee_id=e.id "
+        f"WHERE r.period_id=? ORDER BY e.full_name",
         (period["id"],)).fetchall()
     buf = io.StringIO()
     w = csv.writer(buf)
@@ -568,13 +570,11 @@ def trends():
 def departments():
     """Management: compare average scores between departments."""
     period = active_period()
+    avgcols = ", ".join(f"ROUND(AVG(r.{v}),2) {v}" for v in VALUES)
     rows = g.db.execute(
-        "SELECT e.department, COUNT(*) n, ROUND(AVG(r.overall),2) overall, "
-        "ROUND(AVG(r.amanah),2) amanah, ROUND(AVG(r.kompeten),2) kompeten, "
-        "ROUND(AVG(r.harmonis),2) harmonis, ROUND(AVG(r.loyal),2) loyal, "
-        "ROUND(AVG(r.adaptif),2) adaptif "
-        "FROM results r JOIN employees e ON r.employee_id=e.id "
-        "WHERE r.period_id=? GROUP BY e.department ORDER BY overall DESC",
+        f"SELECT e.department, COUNT(*) n, ROUND(AVG(r.overall),2) overall, {avgcols} "
+        f"FROM results r JOIN employees e ON r.employee_id=e.id "
+        f"WHERE r.period_id=? GROUP BY e.department ORDER BY overall DESC",
         (period["id"],)).fetchall()
     return render_template("departments.html", rows=rows, period=period)
 

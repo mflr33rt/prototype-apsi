@@ -30,7 +30,7 @@
 const collective = {{ collective|tojson }}, comparison = {{ comparison|tojson }};
 const labels = {{ (VALUE_LABELS.values()|list)|tojson }};
 new Chart(c1,{type:'bar',data:{labels,datasets:[{data:Object.values(collective),
-  backgroundColor:['#0891b2','#0ea5e9','#6366f1','#14b8a6','#22d3ee']}]},
+  backgroundColor:['#0891b2','#0ea5e9','#6366f1','#14b8a6','#22d3ee','#a78bfa']}]},
   options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:5,ticks:{color:'#64748b'}},x:{ticks:{color:'#94a3b8'}}}}});
 new Chart(c2,{type:'bar',data:{labels:comparison.map(x=>x.name),datasets:[{data:comparison.map(x=>x.overall),
   backgroundColor:'#38bdf8'}]},
